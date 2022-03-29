@@ -20,12 +20,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.rocketmq.common.Configuration;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.namesrv.NamesrvConfig;
 import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.logging.InternalLoggerFactory;
-import org.apache.rocketmq.common.namesrv.NamesrvConfig;
 import org.apache.rocketmq.namesrv.kvconfig.KVConfigManager;
 import org.apache.rocketmq.namesrv.processor.ClusterTestRequestProcessor;
 import org.apache.rocketmq.namesrv.processor.DefaultRequestProcessor;
@@ -54,17 +55,24 @@ public class NamesrvController {
     private RemotingServer remotingServer;
 
     private BrokerHousekeepingService brokerHousekeepingService;
-
+    /**
+     * 业务执行线程池
+     */
     private ExecutorService remotingExecutor;
 
     private Configuration configuration;
     private FileWatchService fileWatchService;
 
     public NamesrvController(NamesrvConfig namesrvConfig, NettyServerConfig nettyServerConfig) {
+        // namserver的配置
         this.namesrvConfig = namesrvConfig;
+        // netty的配置
         this.nettyServerConfig = nettyServerConfig;
+        // kv管理器
         this.kvConfigManager = new KVConfigManager(this);
+        // 路由信息管理器
         this.routeInfoManager = new RouteInfoManager();
+        // broker下线的回调处理服务
         this.brokerHousekeepingService = new BrokerHousekeepingService(this);
         this.configuration = new Configuration(
             log,
@@ -74,32 +82,32 @@ public class NamesrvController {
     }
 
     public boolean initialize() {
-
+        // 加载kv 配置
         this.kvConfigManager.load();
 
+        // 创建netty的bootstrap,EventLoopGroup(boos,worker)
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
-
+        // 创建业务线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
-
+        //注册namesrv的默认处理器，处理网络请求 DefaultRequestProcessor
         this.registerProcessor();
 
+        //10s检查一次broker状态，剔除超过2分钟没有发送心跳上来的broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 NamesrvController.this.routeInfoManager.scanNotActiveBroker();
             }
         }, 5, 10, TimeUnit.SECONDS);
-
+        //namesrv每隔10分钟打印一次KV配置。
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 NamesrvController.this.kvConfigManager.printAllPeriodically();
             }
         }, 1, 10, TimeUnit.MINUTES);
-
+        //tls相关
         if (TlsSystemConfig.tlsMode != TlsMode.DISABLED) {
             // Register a listener to reload SslContext
             try {
@@ -153,6 +161,7 @@ public class NamesrvController {
     }
 
     public void start() throws Exception {
+        //开启netty server
         this.remotingServer.start();
 
         if (this.fileWatchService != null) {

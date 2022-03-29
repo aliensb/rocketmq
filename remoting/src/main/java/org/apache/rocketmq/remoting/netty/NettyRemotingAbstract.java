@@ -77,7 +77,7 @@ public abstract class NettyRemotingAbstract {
 
     /**
      * This container holds all processors per request code, aka, for each incoming request, we may look up the
-     * responding processor in this map to handle the request.
+     * responding processor in this map to handle the request. 根据request code保存的处理器
      */
     protected final HashMap<Integer/* request code */, Pair<NettyRequestProcessor, ExecutorService>> processorTable =
         new HashMap<Integer, Pair<NettyRequestProcessor, ExecutorService>>(64);
