@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.message.MessageQueue;
@@ -43,11 +44,11 @@ public class ClientConfig {
     protected AccessChannel accessChannel = AccessChannel.LOCAL;
 
     /**
-     * Pulling topic information interval from the named server
+     * Pulling topic information interval from the named server 30s拉一次nameserver
      */
     private int pollNameServerInterval = 1000 * 30;
     /**
-     * Heartbeat interval in microseconds with message broker
+     * Heartbeat interval in microseconds with message broker 30s给broker发送一次心跳
      */
     private int heartbeatBrokerInterval = 1000 * 30;
     /**
@@ -65,6 +66,14 @@ public class ClientConfig {
 
     private LanguageCode language = LanguageCode.JAVA;
 
+    /**
+     * 创建clientId clientld为客户端IP+instance+(unitname可选)，用程序，应用程序岂不是clientld相同，会造成混乱?<br/>
+     * 为了避免这个问题 ， 如果 instance 为默认值 DEFAULT 的话， RocketMQ 会自动将 instance 设置为进程 ID，<br/>
+     * 这样避免了不同进程的相互影响，但同 一 个 JVM 中 的不同消费者和不同生产者在启动时获取到的 MQClientlnstane 实例都是同一个。<br/>
+     * 为了避免这个问题，可以设置一个unitName
+     * 
+     * @return
+     */
     public String buildMQClientId() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getClientIP());

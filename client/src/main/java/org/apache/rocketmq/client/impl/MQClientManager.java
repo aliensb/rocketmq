@@ -25,6 +25,10 @@ import org.apache.rocketmq.client.log.ClientLogger;
 import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.remoting.RPCHook;
 
+/**
+ * mqClient 管理器，运行期间，整个jvm仅有一个实例，维护了一个map(factoryTable)用于存放clientId到MQClientInstance的映射
+ * 一个clientId对应一个MQClientInstance
+ */
 public class MQClientManager {
     private final static InternalLogger log = ClientLogger.getLog();
     private static MQClientManager instance = new MQClientManager();

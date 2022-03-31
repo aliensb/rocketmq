@@ -908,8 +908,8 @@ public class BrokerController {
             this.registerBrokerAll(true, false, true);
         }
 
+        //定时到nameserver上去注册broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 try {

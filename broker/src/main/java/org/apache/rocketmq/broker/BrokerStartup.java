@@ -98,13 +98,18 @@ public class BrokerStartup {
                 System.exit(-1);
             }
 
+            //broker的配置
             final BrokerConfig brokerConfig = new BrokerConfig();
+            //netty server的配置
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
+            //netty client的配置
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
-
+            //netty client是否使用tls
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
                 String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING))));
+            //netty server 监听的端口
             nettyServerConfig.setListenPort(10911);
+            //消息存储的配置
             final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
 
             if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {
@@ -137,7 +142,7 @@ public class BrokerStartup {
                 System.out.printf("Please set the %s variable in your environment to match the location of the RocketMQ installation", MixAll.ROCKETMQ_HOME_ENV);
                 System.exit(-2);
             }
-
+            //检查nameserver地址的合法性
             String namesrvAddr = brokerConfig.getNamesrvAddr();
             if (null != namesrvAddr) {
                 try {
@@ -168,11 +173,11 @@ public class BrokerStartup {
                 default:
                     break;
             }
-
+            //todo 如果是DLeger模式，则brokerId设置成-1，但是在nameserver里面brokerAddrTable这个里面的key是brokerId,那这里是咋个处理的喃
             if (messageStoreConfig.isEnableDLegerCommitLog()) {
                 brokerConfig.setBrokerId(-1);
             }
-
+            //messageStore监听的端口是netty监听端口的+1
             messageStoreConfig.setHaListenPort(nettyServerConfig.getListenPort() + 1);
             LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             JoranConfigurator configurator = new JoranConfigurator();
@@ -223,6 +228,7 @@ public class BrokerStartup {
                 System.exit(-3);
             }
 
+            //优雅停机，关闭资源
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 private volatile boolean hasShutdown = false;
                 private AtomicInteger shutdownTimes = new AtomicInteger(0);

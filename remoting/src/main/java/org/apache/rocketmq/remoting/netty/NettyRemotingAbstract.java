@@ -430,7 +430,9 @@ public abstract class NettyRemotingAbstract {
                     log.warn("send a request command to channel <" + addr + "> failed.");
                 }
             });
-
+            //这里的waitResponse会在收到回复消息后进行唤醒。this.responseTable.put(opaque, responseFuture);
+            //responseFuture放到了this.responseTable中，后面在处理收到消息的时候会从this.responseTable中通过opaque
+            //拿到这个response,并调用responseFuture.putResponse方法，进而唤醒这个线程
             RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
             if (null == responseCommand) {
                 if (responseFuture.isSendRequestOK()) {

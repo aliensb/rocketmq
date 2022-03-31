@@ -169,12 +169,13 @@ public class RouteInfoManager {
                 Iterator<Entry<Long, String>> it = brokerAddrsMap.entrySet().iterator();
                 while (it.hasNext()) {
                     Entry<Long, String> item = it.next();
+                    //broker的地址没变，但是brokerId变了，有可能是切换角色了，则将来brokerAddrTable中map里面之前的元素删掉（角色的切换）
                     if (null != brokerAddr && brokerAddr.equals(item.getValue()) && brokerId != item.getKey()) {
                         it.remove();
                     }
                 }
-
                 String oldAddr = brokerData.getBrokerAddrs().put(brokerId, brokerAddr);
+
                 registerFirst = registerFirst || (null == oldAddr);
 
                 if (null != topicConfigWrapper
