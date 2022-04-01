@@ -25,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.client.common.ThreadLocalIndex;
 
 public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> {
-    private final ConcurrentHashMap<String, FaultItem> faultItemTable = new ConcurrentHashMap<String, FaultItem>(16);
+    //出问题的broker的map
+    private final ConcurrentHashMap<String/*brokerName*/, FaultItem> faultItemTable = new ConcurrentHashMap<String, FaultItem>(16);
 
     private final ThreadLocalIndex whichItemWorst = new ThreadLocalIndex();
 
@@ -37,12 +38,15 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
             faultItem.setCurrentLatency(currentLatency);
             faultItem.setStartTimestamp(System.currentTimeMillis() + notAvailableDuration);
 
+            //如果当前的FaultItem存在，则直接更新
             old = this.faultItemTable.putIfAbsent(name, faultItem);
             if (old != null) {
                 old.setCurrentLatency(currentLatency);
+                //设置当前item不可用的到期时间
                 old.setStartTimestamp(System.currentTimeMillis() + notAvailableDuration);
             }
         } else {
+            //更新
             old.setCurrentLatency(currentLatency);
             old.setStartTimestamp(System.currentTimeMillis() + notAvailableDuration);
         }
@@ -54,6 +58,7 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
         if (faultItem != null) {
             return faultItem.isAvailable();
         }
+        //如果当前都没维护这个name，则说明他是可用的，
         return true;
     }
 
@@ -99,6 +104,7 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
     class FaultItem implements Comparable<FaultItem> {
         private final String name;
         private volatile long currentLatency;
+        //记录到什么时间这个Item变成可用
         private volatile long startTimestamp;
 
         public FaultItem(final String name) {

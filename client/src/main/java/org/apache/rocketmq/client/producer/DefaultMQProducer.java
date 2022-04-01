@@ -120,6 +120,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * Maximum number of retry to perform internally before claiming sending failure in asynchronous mode. </p>
      *
      * This may potentially cause message duplication which is up to application developers to resolve.
+     * 指定同步方式重试次数 ，异步重试机制在收到消息发送结构后执行回调之前进行重试
      */
     private int retryTimesWhenSendAsyncFailed = 2;
 
